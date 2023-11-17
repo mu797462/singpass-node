@@ -1,0 +1,9 @@
+"nationality": str(data.nationality),
+				"dob": str(data.dob),
+				"email": str(data.email),
+				"mobileno": str(data.mobileno.prefix) + str(data.mobileno.areacode) + " " + str(data.mobileno.nbr),
+				"regadd": address,
+				"housingtype": str(data.housingtype) == "" ? str(data.hdbtype) : str(data.housingtype),
+				"marital": str(data.marital),
+				"edulevel": str(data.edulevel),
+				"assessableincome": noaData

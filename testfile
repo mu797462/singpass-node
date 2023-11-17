@@ -1,0 +1,13 @@
+<script>
+    var loanAmount = localStorage.getItem("loanAmount");
+
+    var loanTenure = localStorage.getItem("loanTenure");
+    var loanPurpose = localStorage.getItem("loanPurpose");
+    var moneylender = localStorage.getItem("moneylender");
+
+    $('#loanAmount').val(loanAmount);
+
+
+</script>
+
+aws ami id:  ami-0178530ee123abbaf

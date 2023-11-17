@@ -1,0 +1,291 @@
+@media (min-width: 576px) {
+  .retrieve-info-modal .modal-dialog {
+    max-width: 1040px;
+    margin-right: auto;
+    margin-left: auto;
+  }
+  .thank-you-modal .modal-dialog {
+    max-width: 1040px;
+    margin-right: auto;
+    margin-left: auto;
+  }
+  .unable-retrieve-info-modal .modal-dialog {
+    max-width: 1040px;
+    margin-right: auto;
+    margin-left: auto;
+  }
+}
+@media (min-width: 1600px) and (max-width: 1799.98px) {
+  .sgp-info-box {
+    max-width: 1250px;
+  }
+}
+@media (min-width: 1400px) and (max-width: 1599.98px) {
+  .sgp-front-section .content-wrapper {
+    max-width: 1300px;
+  }
+  .sgp-info-box {
+    max-width: 1050px;
+  }
+}
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+  .sgp-front-section .content-wrapper {
+    max-width: 1100px;
+    padding: 97px 30px 122px 30px;
+  }
+  .sgp-front-section::before {
+    top: -150px;
+    right: -150px;
+    width: 800px;
+    height: 800px;
+  }
+  .sgp-info-box {
+    max-width: 900px;
+  }
+}
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .sgp-front-section::before {
+    top: -150px;
+    right: -150px;
+    width: 800px;
+    height: 800px;
+  }
+  .sgp-front-section .site-logo {
+    padding: 0;
+  }
+  .sgp-front-section .content-wrapper {
+    padding: 97px 64px 122px 64px;
+  }
+  .sgp-front-section .content-meta-wrapper h1 {
+    font-size: 36px;
+  }
+  .sgp-front-section .content-meta-wrapper h2 {
+    font-size: 36px;
+  }
+  .sgp-front-section .content-form-wrapper {
+    padding-top: 0;
+  }
+  .sgp-front-section .content-form-wrapper .apply-btn {
+    padding: 14px 80px;
+    margin-top: 40px;
+  }
+  .sgp-front-section .content-form-wrapper::before {
+    height: 560px;
+  }
+  .unable-retrieve-info-modal .modal-dialog {
+    max-width: 880px;
+  }
+  .thank-you-modal .modal-dialog {
+    max-width: 880px;
+  }
+  .retrieve-info-modal .modal-dialog {
+    max-width: 880px;
+  }
+  .sgp-info-box {
+    max-width: 800px;
+  }
+  .sgp-user-info-form .sgp-logo {
+    padding: 0 50px;
+  }
+}
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .sgp-front-section {
+    padding: 150px 0;
+  }
+  .sgp-front-section::before {
+    top: -150px;
+    right: -150px;
+    width: 800px;
+    height: 800px;
+  }
+  .sgp-front-section .site-logo {
+    padding: 0;
+  }
+  .sgp-front-section .content-wrapper {
+    padding: 100px 60px;
+  }
+  .sgp-front-section .content-form-wrapper {
+    padding-left: 0;
+  }
+  .sgp-front-section .content-form-wrapper::before {
+    content: none;
+  } 
+  .unable-retrieve-info-modal .modal-dialog {
+    max-width: 700px;
+  }
+  .thank-you-modal .modal-dialog {
+    max-width: 700px;
+  }
+  .retrieve-info-modal .modal-dialog {
+    max-width: 700px;
+  }
+  .thank-you-modal .modal-content {
+    height: 281px;
+  }
+  .sgp-user-info-form .sgp-logo {
+    padding: 0;
+  }
+}
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .sgp-front-section {
+    padding: 150px 0;
+  }
+  .sgp-front-section::before {
+    top: -150px;
+    right: -150px;
+    width: 600px;
+    height: 600px;
+  }
+  .sgp-front-section .site-logo {
+    padding: 0;
+  }
+  .sgp-front-section .content-wrapper {
+    padding: 100px 30px;
+  }
+  .sgp-front-section .content-form-wrapper {
+    padding-left: 0;
+  }
+  .sgp-front-section .content-form-wrapper::before {
+    content: none;
+  } 
+  .sgp-front-section .content-meta-wrapper h1 {
+    font-size: 46px;
+  }
+  .sgp-front-section .content-meta-wrapper h2 {
+    font-size: 46px;
+  }
+  .unable-retrieve-info-modal .modal-dialog {
+    max-width: 500px;
+  }
+  .thank-you-modal .modal-dialog {
+    max-width: 500px;
+  }
+  .retrieve-info-modal .modal-dialog {
+    max-width: 500px;
+  }
+  .thank-you-modal .modal-content {
+    height: 281px;
+  }
+  .sgp-user-info-form .sgp-logo {
+    padding: 0;
+  }
+  .income-history-list {
+    padding: 0 40px;
+  }
+}
+@media (min-width: 320px) and (max-width: 575.98px) {
+  .sgp-front-section {
+    padding: 60px 0;
+  }
+  .sgp-front-section::before {
+    top: -150px;
+    right: -150px;
+    width: 600px;
+    height: 600px;
+  }
+  .sgp-front-section .site-logo {
+    padding: 0;
+    margin-bottom: 40px;
+  }
+  .sgp-front-section .site-logo .img-box {
+    width: 280px;
+  }
+  .sgp-front-section .content-wrapper {
+    padding: 40px;
+  }
+  .sgp-front-section .content-meta-wrapper .img-box {
+    width: 280px;
+  }
+  .sgp-front-section .content-meta-wrapper .img-box img {
+    width: 100%;
+  }
+  .sgp-front-section .content-meta-wrapper h1 {
+    font-size: 29px;
+    margin: 40px 0;
+  }
+  .sgp-front-section .content-meta-wrapper h2 {
+    font-size: 29px;
+  }
+  .sgp-front-section .content-form-wrapper {
+    padding-left: 0;
+  }
+  .sgp-front-section .content-form-wrapper::before {
+    content: none;
+  }
+  .sgp-front-section .content-form-wrapper .apply-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 20px;
+  }
+  .unable-retrieve-info-modal .modal-body .img-box {
+    width: 320px;
+    margin: 0 auto;
+    margin-top: 50px;
+  }
+  .unable-retrieve-info-modal .modal-body .img-box img {
+    width: 100%;
+  }
+  .retrieve-info-modal .modal-body .img-box {
+    width: 320px;
+    margin: 0 auto;
+    margin-top: 20px;
+  }
+  .retrieve-info-modal .modal-body .img-box img {
+    width: 100%;
+  }
+  .thank-you-modal .modal-content {
+    height: 281px;
+  }
+  .sgp-user-info-form .sgp-logo {
+    padding: 0;
+    width: 300px;
+  }
+  .sgp-user-info-form .sgp-logo img {
+    width: 100%;
+  }
+  .sgp-user-info-form {
+    padding: 60px 0;
+  }
+  .income-history-list {
+    padding: 0 20px;
+  }
+  .sgp-info-box.personal-info {
+    margin-bottom: 30px;
+  }
+  .income-history-chart {
+    margin-top: 60px;
+  }
+  .sgp-info-box.income-details {
+    margin-bottom: 60px;
+  }
+  .form-buttons {
+    margin-top: 60px;
+  }
+}
+@media (max-width: 400px) {
+  .sgp-front-section .content-wrapper {
+    padding: 20px;
+    border-radius: 20px;
+  }
+  .sgp-front-section .content-meta-wrapper .img-box {
+    width: 230px;
+  }
+  .sgp-front-section .content-meta-wrapper h1 {
+    font-size: 24px;
+  }
+  .sgp-front-section .content-meta-wrapper h2 {
+    font-size: 24px;
+  }
+  .sgp-front-section .content-form-wrapper .apply-btn {
+    padding: 12px;
+  }
+  .unable-retrieve-info-modal .modal-body .img-box {
+    width: 250px;
+  }
+  .retrieve-info-modal .modal-body .img-box {
+    width: 250px;
+  }
+  .sgp-user-info-form .sgp-logo {
+    width: 260px;
+  }
+}

@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="assets/css/bootstrap-min.css">
+	<link rel="stylesheet" href="assets/css/style.css">
+	<link rel="stylesheet" href="assets/css/responsive.css">
+
+	<script src="assets/js/jquery-3.6.0.js"></script>
+	<script src="assets/components/jquery/purl.js"></script>
+	<script src="assets/components/tether/js/tether.min.js"></script>
+	<title>User Profile Form</title>
+	<script>
+		var newForm;
+		var contributions = [];
+		var cpBalences = [];
+		var cpfContributionPdf = '';
+		var cpfAssesmentPdf = '';
+		// ---START---SETUP VARIABLES---
+		var scrollToAppForm = false;
+		var authApiUrl; // URL for authorize API
+		var clientId; // your app_id/client_id provided to you during onboarding
+		var redirectUrl; // callback url for your application
+		var purpose_id; // The purpose of your data retrieval
+		var scope; // the attributes you are retrieving for your application to fill the form
+		var method = "S256"
+		var securityEnable; // the auth level, determines the flow
+		var clientAssertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+		// ---END---SETUP VARIABLES---
+
+
+		// ---START---WINDOW ONLOAD---
+		window.onload = function (e) {
+			// invoke AJAX call to get the demo app info from config
+			$.ajax({
+				url: "/getEnv",
+				data: {},
+				type: "GET",
+				success: function (result) {
+					// console.log("result:", result);
+					clientId = result.clientId;
+					redirectUrl = result.redirectUrl;
+					scope = result.scope;
+					purpose_id = result.purpose_id;
+					environment = result.environment;
+					authApiUrl = result.authApiUrl;
+				},
+				error: function (result) {
+					alert("ERROR:" + JSON.stringify(result.responseJSON.error));
+				}
+			});
+		}
+		// ---END---WINDOW ONLOAD---
+
+
+		// ---START---MAIN HANDLER---
+		$(function () {
+			$("#formAuthorize").submit(function (event) {
+				event.preventDefault();
+				callAuthorizeApi();
+			});
+			$("#formApplication").submit(function (event) {
+				event.preventDefault();
+				// add code here to submit the application form back to server for processing
+				$('#complete').toggleClass('hidden');
+			});
+		});
+		// ---END---MAIN HANDLER---
+
+
+		// ---START---AUTH API---
+		function callAuthorizeApi() {
+			//Call backend server to generate code challenge 
+			$.ajax({
+				url: "/generateCodeChallenge",
+				data: {},
+				type: "POST",
+				success: function (result) {
+					//Redirect to authorize url after generating code challenge
+					var authorizeUrl = authApiUrl + "?client_id=" + clientId +
+						"&scope=" + scope +
+						"&purpose_id=" + purpose_id +
+						"&code_challenge=" + result +
+						"&code_challenge_method=" + method +
+						"&redirect_uri=" + redirectUrl;
+
+					window.location = authorizeUrl;
+				},
+				error: function (result) {
+					alert("ERROR:" + JSON.stringify(result.responseJSON.error));
+				}
+			});
+		}
+		// ---END---AUTH API---
+
+
+		// ---START---CALLBACK HANDLER (AUTH CODE)
+		if (this.location.href.indexOf("callback?code") > -1) {
+			scrollToAppForm = true;
+			callServerAPIs(); // call the backend server APIs
+		} else if (this.location.href.indexOf("callback") > -1) {
+			scrollToAppForm = true;
+			alert("ERROR:" + JSON.stringify("Missing Auth Code"));
+		}
+		// ---END---CALLBACK HANDLER
+
+
+		// ---START---CALL SERVER API - calling server side APIs (token & person) to get the person data for prefilling form
+		function callServerAPIs() {
+			var authCode = $.url(this.location.href).param('code');
+			// console.log("Auth Code:",authCode);
+			// console.log("State:",state);
+
+			// invoke AJAX call from frontend client side to your backend server side
+			$.ajax({
+				url: "/getPersonData",
+				data: {
+					authCode: authCode,
+					codeVerifier: window.sessionStorage.getItem("codeVerifier")
+				},
+				type: "POST", // post to server side
+				success: function (result) {
+					console.log("result", result);
+					prefillForm(result);
+				},
+				error: function (result) {
+					alert("ERROR:" + JSON.stringify(result.responseJSON.error));
+				}
+			});
+		}
+		// ---END---CALL SERVER API - calling server side APIs (token & person) to get the person data for prefilling form
+
+
+		// ---START---PREFILL FORM (with MyInfo data)
+		function prefillForm(data) {
+
+
+			var loanAmount = localStorage.getItem("loanAmount");
+
+			var loanTenure = localStorage.getItem("loanTenure");
+			var loanPurpose = localStorage.getItem("loanPurpose");
+			var moneylender = localStorage.getItem("moneylender");
+			// prefill form data
+			var noaData = "";
+			var address = "";
+			if (data["noa-basic"]) {
+				noaData = str(data["noa-basic"].amount) ? formatMoney(str(data["noa-basic"].amount), 2, ".", ",") : "";
+			}
+			if (data.regadd.type == "SG") {
+				address = str(data.regadd.country) == "" ? "" :
+					str(data.regadd.block) + " " +
+					str(data.regadd.building) + " \n" +
+					"#" + str(data.regadd.floor) + "-" + str(data.regadd.unit) + " " +
+					str(data.regadd.street) + " \n" +
+					"Singapore " + str(data.regadd.postal)
+			} else if (data.regadd.type == "Unformatted") {
+				address = str(data.regadd.line1) + "\n" +
+					str(data.regadd.line2)
+			}
+			var formValues = {
+				"loanAmount": loanAmount,
+				"loanTenure": loanTenure,
+				"loanPurpose": loanPurpose,
+				"moneylender": moneylender,
+				"uinfin": str(data.uinfin),
+				"name": str(data.name),
+				"sex": str(data.sex),
+				"race": str(data.race),
+				"nationality": str(data.nationality),
+				"dob": str(data.dob),
+				"email": str(data.email),
+				"mobileno": str(data.mobileno.prefix) + str(data.mobileno.areacode) + " " + str(data.mobileno.nbr),
+				"regadd": address,
+				"housingtype": str(data.housingtype) == "" ? str(data.hdbtype) : str(data.housingtype),
+				"marital": str(data.marital),
+				"edulevel": str(data.edulevel),
+				"assessableincome": noaData,
+				"hdbtype": str(data.hdbtype),
+				"ownerprivate": str(data.ownerprivate) == 'true' ? 'Yes' : 'No',
+				// 'cpfcontributions': cpfcontributions.history
+			};
+			// Populate values
+			populate('#formApplication', formValues);
+			// get form values for pdf
+			newForm = formValues;
+			console.log(data.cpfbalances);
+			let temp = "";
+
+			if (data.cpfcontributions && data.cpfcontributions.history) {
+				contributions = data.cpfcontributions.history;
+				console.log("contributions", contributions);
+
+				contributions.forEach(function (contribute) {
+					const formattedDate = new Date(str(contribute.date)).toLocaleDateString('en-US', {
+						day: '2-digit',
+						month: 'short',
+						year: 'numeric'
+					});
+
+					const formattedMonth = new Date(str(contribute.month)).toLocaleDateString('en-US', {
+						month: 'short',
+						year: 'numeric'
+					});
+
+					temp = `<li>
+						<div>
+							<span>${formattedDate}</span>
+							<p>${str(contribute.employer)}</p>
+							<i>${formattedMonth}</i>
+						</div>
+						<div>
+							<strong>$${str(contribute.amount)}</strong>
+						</div>
+						</li>`;
+
+					$('#cp-id').append(temp);
+					cpfContributionTemp = ` 
+								<tr style="height:20pt">
+									<td
+										style="width:96pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt">
+										<p class="s6" style="padding-top: 1pt;padding-left: 3pt;text-indent: 0pt;text-align: left;">${formattedMonth}</p>
+									</td>
+									<td
+										style="width:107pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt">
+										<p class="s6" style="padding-top: 1pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">${formattedDate}
+										</p>
+									</td>
+									<td
+										style="width:105pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt">
+										<p class="s6" style="padding-top: 1pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">$${str(contribute.amount)}</p>
+									</td>
+									<td
+										style="width:198pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt">
+										<p class="s6" style="padding-top: 1pt;padding-left: 4pt;text-indent: 0pt;text-align: left;">${str(contribute.employer)}</p>
+									</td>
+								</tr>`;
+
+					cpfContributionPdf = cpfContributionPdf + cpfContributionTemp;
+				});
+			} else {
+				$('#cp-id').append('<p>No CPF contributions data found</p>');
+				console.error("No CPF contributions data found");
+			}
+
+			console.log(formValues);
+
+			let myObject = [data["noa-basic"]];
+			myObject.forEach(function (obj) {
+
+				noaData = str(obj.amount) ? formatMoney(str(data["noa-basic"].amount), 2, ".", ",") : "";
+				temp = `<li>
+						<div>
+							<span class="year">${str(obj.yearofassessment)}</span>
+						</div>
+						<div>
+							<strong>$${noaData}</strong>
+						</div>
+					</li>`;
+
+				$('#assesment').append(temp);
+
+				cpfContributionTemp = `
+				<tr style="height:20pt">
+					<td
+						style="width:252pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt">
+						<p class="s5" style="padding-top: 3pt;padding-left: 53pt;text-indent: 0pt;text-align: left;">Year of
+							Assessment: ${str(obj.yearofassessment)}</p>
+					</td>
+				</tr>
+				<tr style="height:20pt">
+					<td
+						style="width:252pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt">
+						<p class="s6" style="padding-top: 1pt;padding-left: 3pt;text-indent: 0pt;text-align: left;">Type:
+							ORIGINAL</p>
+					</td>
+				</tr>
+				<tr style="height:20pt">
+					<td
+						style="width:252pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt">
+						<p class="s6" style="padding-top: 1pt;padding-left: 3pt;text-indent: 0pt;text-align: left;">Assessable
+							Income: $${noaData}</p>
+					</td>
+				</tr>
+				<tr style="height:72pt">
+					<td
+						style="width:252pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt">
+						<p class="s5" style="padding-top: 3pt;padding-left: 3pt;text-indent: 0pt;line-height: 12pt;text-align: left;">
+							Income Breakdown</p>
+						<ul id="l1">
+							<li data-list-text="•">
+								<p class="s6" style="padding-left: 12pt;text-indent: -9pt;line-height: 13pt;text-align: left;">
+									Employment: $${noaData}</p>
+							</li>
+							<li data-list-text="•">
+								<p class="s6" style="padding-left: 12pt;text-indent: -9pt;line-height: 13pt;text-align: left;">
+									Trade:</p>
+							</li>
+							<li data-list-text="•">
+								<p class="s6" style="padding-left: 12pt;text-indent: -9pt;line-height: 13pt;text-align: left;">
+									Rent:</p>
+							</li>
+							<li data-list-text="•">
+								<p class="s6" style="padding-left: 12pt;text-indent: -9pt;line-height: 14pt;text-align: left;">
+									Interest:</p>
+							</li>
+						</ul>
+					</td>
+				</tr>`;
+
+				cpfAssesmentPdf = cpfAssesmentPdf + cpfContributionTemp;
+			});
+
+
+
+
+		}
+
+		function formatMoney(n, c, d, t) {
+			var c = isNaN(c = Math.abs(c)) ? 2 : c,
+				d = d == undefined ? "." : d,
+				t = t == undefined ? "," : t,
+				s = n < 0 ? "-" : "",
+				i = String(parseInt(n = Math.abs(Number(n) || 0).toFixed(c))),
+				j = (j = i.length) > 3 ? j % 3 : 0;
+
+			return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n -
+				i).toFixed(c).slice(2) : "");
+		}
+
+		function populate(frm, data) {
+			$.each(data, function (key, value) {
+				$('[name=' + key + ']', frm).val(value);
+				$('[name=' + key + ']', frm).prop('readonly', true);
+			});
+		}
+
+		// used to output data items with value or desc
+		function str(data) {
+			if (!data)
+				return null;
+			if (data.value)
+				return data.value;
+			else if (data.desc)
+				return data.desc;
+			else if (typeof data == "string")
+				return data;
+			else
+				return "";
+		}
+		// ---END---PREFILL FORM (with MyInfo data)
+	</script>
+</head>
+
+<body>
+
+	<!-- sgp-user-info-form-start -->
+	<section class="sgp-user-info-form">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-12">
+					<div class="sgp-logo">
+						<img src="assets/imgs/singpass_logo.png" alt="logo">
+					</div>
+					<form id="formApplication" class="user-info-form-wrapper">
+						<div class="sgp-info-box personal-info">
+							<h4>Loan Details</h4>
+							<div class="input-field">
+								<label for="NRIC" class="form-label">Loan Amount</label>
+								<input type="text" name="loanAmount" class="form-control style-1" id="NRIC" value=""
+									placeholder="S1234567D">
+							</div>
+							<div class="input-field">
+								<label for="name" class="form-label">Loan Tenure</label>
+								<input type="text" name="loanTenure" class="form-control style-1" id="name"
+									placeholder="Lim Ah Mui">
+							</div>
+							<div class="input-field">
+								<label for="d_o_b" class="form-label">Loan Purpose</label>
+								<input type="text" name="loanPurpose" class="form-control style-1" id="d_o_b"
+									placeholder="4 September 1976">
+							</div>
+							<div class="input-field">
+								<label for="gender" class="form-label">Other Moneylenders</label>
+								<input type="text" name="moneylender" class="form-control style-1" id="gender"
+									placeholder="Female">
+							</div>
+						</div>
+						<div class="sgp-info-box personal-info">
+							<h4>Personal Information</h4>
+							<div class="input-field">
+								<label for="NRIC" class="form-label">NRIC/FIN</label>
+								<input type="text" name="uinfin" class="form-control style-1" id="NRIC" value=""
+									placeholder="S1234567D">
+							</div>
+							<div class="input-field">
+								<label for="name" class="form-label">Name</label>
+								<input type="text" name="name" class="form-control style-1" id="name"
+									placeholder="Lim Ah Mui">
+							</div>
+							<div class="input-field">
+								<label for="d_o_b" class="form-label">Date of Birth</label>
+								<input type="text" name="dob" class="form-control style-1" id="d_o_b"
+									placeholder="4 September 1976">
+							</div>
+							<div class="input-field">
+								<label for="gender" class="form-label">Gender</label>
+								<input type="text" name="sex" class="form-control style-1" id="gender"
+									placeholder="Female">
+							</div>
+							<div class="input-field">
+								<label for="race" class="form-label">Race</label>
+								<input type="text" name="race" class="form-control style-1" id="race"
+									placeholder="Chinese">
+							</div>
+							<div class="input-field">
+								<label for="marital_status" class="form-label">Marital Status</label>
+								<input type="text" name="marital" class="form-control style-2" id="marital_status"
+									placeholder="Single">
+							</div>
+							<div class="input-field">
+								<label for="nationality" class="form-label">Nationality</label>
+								<input type="text" name="nationality" class="form-control style-3" id="nationality"
+									placeholder="Singapore Citizen">
+							</div>
+							<div class="input-field">
+								<label for="pass_type" class="form-label">Pass Type</label>
+								<input type="text" name="pass_type" class="form-control style-3" id="pass_type"
+									placeholder="N/A">
+							</div>
+							<div class="input-field">
+								<label for="pass_status" class="form-label">Pass Status</label>
+								<input type="text" name="pass_status" class="form-control style-3" id="pass_status"
+									placeholder="N/A">
+							</div>
+						</div>
+						<div class="sgp-info-box housing-details">
+							<h4>Contact & Housing Details</h4>
+							<div class="input-field">
+								<label for="mobile_number" class="form-label">Mobile Number</label>
+								<input type="text" name="mobileno" class="form-control style-2" id="mobile_number">
+							</div>
+							<div class="input-field">
+								<label for="email_address" class="form-label">Email Address</label>
+								<input type="text" name="email" class="form-control style-1" id="email_address">
+							</div>
+							<div class="input-field">
+								<label for="address" class="form-label">Address</label>
+								<input type="text" name="regadd" class="form-control style-1" id="address"
+									placeholder="123, Abc Street #12-345, Singapore 683123m">
+							</div>
+							<div class="input-field">
+								<label for="ownership_of_private_property" class="form-label">Ownership of Private
+									Property</label>
+								<input type="text" name="ownerprivate" class="form-control style-1"
+									id="ownership_of_private_property" placeholder="No">
+							</div>
+							<div class="input-field">
+								<label for="type_of_housing" class="form-label">Type of Housing</label>
+								<input type="text" name="housingtype" class="form-control style-1" id="type_of_housing"
+									placeholder="HDB">
+							</div>
+							<div class="input-field">
+								<label for="HDB" class="form-label">Type of HDB</label>
+								<input type="text" name="hdbtype" class="form-control style-3" id="HDB"
+									placeholder="4 ROOM FLAT">
+							</div>
+						</div>
+						<div class="sgp-info-box income-details">
+							<h4>Employment & Income Details</h4>
+							<div class="input-field">
+								<label for="employment_sector" class="form-label">Employment Sector</label>
+								<input type="text" name="employment_sector" class="form-control style-1"
+									id="employment_sector" placeholder="Lim Ah Mui">
+							</div>
+							<div class="input-field">
+								<label for="occupation" class="form-label">Occupation</label>
+								<input type="text" name="occupation" class="form-control style-1" id="occupation"
+									placeholder="Lim Ah Mui">
+							</div>
+							<div class="input-field">
+								<label for="name_of_employer" class="form-label">Name of Employer</label>
+								<input type="text" name="name_of_employer" class="form-control style-1"
+									id="name_of_employer" placeholder="ABC Company Pte Ltd">
+							</div>
+							<div class="income-history-chart">
+								<h3>CPF Contribution History (up to 15 months)</h3>
+								<div class="income-history-list">
+									<ul id="cp-id"></ul>
+								</div>
+								<h3>Notice of Assessment (Detailed, Last 2 years)</h3>
+								<div class="income-history-list assesment-notice">
+									<ul id="assesment">
+
+									</ul>
+								</div>
+							</div>
+						</div>
+						<div class="form-buttons">
+							<button class="btn submit-btn" onclick="generatePDF()">Submit</button>
+							<button onclick="enableInputs()" class="btn edit-btn" type="">Edit</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- sgp-user-info-form-end -->
+
+	<!-- retrieve-info-modal -->
+	<div class="modal fade retrieve-info-modal" tabindex="-1">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<div class="img-box">
+						<img src="assets/imgs/singpass_logo.png" alt="logo">
+					</div>
+					<p>Apply with singpass and increase your chances of getting a better quote.</p>
+					<div class="retrieve-info-box">
+						<form id="formAuthorize">
+							<!-- <a href="#" onclick="$(this).closest('form').submit()" class="btn2">Retrieve MyInfo</a> -->
+							<button onclick="$(this).closest('form').submit()" class="retrieve-info-btn">Retrieve Myinfo
+								with <span><img src="assets/imgs/singpass_logo.png" alt="logo"></span></button>
+						</form>
+					</div>
+					<span class="extra-meta"><a href="#" data-bs-dismiss="modal">No thanks</a>, I'll submit an
+						application manually.</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- unable-retrieve-info-modal -->
+	<div class="modal fade unable-retrieve-info-modal" tabindex="-1">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<div class="img-box">
+						<img src="assets/imgs/singpass_logo.png" alt="logo">
+					</div>
+					<p>We are unable to retrieve your information from Singpass.</p>
+					<span class="extra-meta"><a href="#" data-bs-dismiss="modal">Click here to proceed with your
+							application manually</a></span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- thank-you-modal -->
+	<div class="modal fade thank-you-modal" id="thankYouModal" tabindex="-1" aria-labelledby="thankYouMoalLabel"
+		aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<p>Thank you for your submission, we will contact you shortly.</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+	<script>
+		// $(window).on('load', function () {
+		// 	$('.retrieve-info-modal').modal('show');
+		// });
+
+		// $(window).on('load', function () {
+		// 	const delay = 5000;
+		// 	function showModal() {
+		// 		$('.unable-retrieve-info-modal').modal('show');
+		// 	}
+		// 	setTimeout(showModal, delay);
+		// });
+	</script>
+
+	<script>
+		var checkFormData = 0;
+		async function generatePDF() {
+
+			var email = $('#email_address').val();
+
+			if (email === '') {
+				alert("email required... Kindly add email");
+				return;
+			}
+
+			var form = document.getElementById('formApplication');
+
+			// Create a FormData object and pass the form element to it
+			var formData = new FormData(form);
+			var entries = formData.entries();
+
+			var newForm = {};
+			// Loop through the entries and log each key/value pair
+			for (var pair of entries) {
+				// console.log(pair[0] + ': ' + pair[1]);
+				newForm[pair[0]] = pair[1];
+			}
+
+			// Loop through the entries and log each key/value pair
+
+			// var reqBody = '';
+			reqBody = {
+				formData: newForm,
+				cpfContributionPdf: cpfContributionPdf,
+				cpfAssesmentPdf: cpfAssesmentPdf
+
+			}
+			// if (checkFormData == 1) {
+			// 	reqBody = {
+			// 		formData: formData,
+			// 		cpfContributionPdf: cpfContributionPdf,
+			// 		cpfAssesmentPdf: cpfAssesmentPdf
+
+			// 	}
+			// }
+			// else {
+
+			// 	reqBody = {
+			// 		formData: Object(newForm),
+			// 		cpfContributionPdf: cpfContributionPdf,
+			// 		cpfAssesmentPdf: cpfAssesmentPdf
+
+			// 	}
+			// }
+			const response = await fetch('/generatePDF', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				// body: newForm,
+				// body: JSON.stringify(Object(newForm)),
+				body: JSON.stringify(reqBody),
+				// body: formData,
+			});
+
+			if (response.ok) {
+
+				const pdfBlob = await response.blob();
+				const link = document.createElement('a');
+				link.href = URL.createObjectURL(pdfBlob);
+				link.download = 'UserProfile.pdf';
+				link.click();
+
+				// const pdfBlob = await response.blob();
+
+				// Send email with the PDF as an attachment
+				const emailResponse = await fetch('/sendEmail', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						// to: 'appjobs.cv@gmail.com',
+						to: email,
+						subject: 'User Profile PDF',
+						text: 'Attached is the user profile PDF.',
+						attachment: await blobToBase64(pdfBlob),
+					}),
+				});
+
+				if (emailResponse.ok) {
+					console.log('Email sent successfully');
+					$('#thankYouModal').modal('show');
+				} else {
+					console.error('Error sending email');
+				}
+			}
+			else {
+				console.error('Error generating PDF');
+			}
+
+			// Utility function to convert Blob to Base64
+			function blobToBase64(blob) {
+				return new Promise((resolve, reject) => {
+					const reader = new FileReader();
+					reader.onloadend = () => resolve(reader.result.split(',')[1]);
+					reader.onerror = reject;
+					reader.readAsDataURL(blob);
+				});
+			}
+		}
+
+
+		function enableInputs() {
+			// Get all input elements
+			var inputs = document.querySelectorAll('input');
+
+			// Loop through each input and toggle the 'disabled' attribute
+			inputs.forEach(function (input) {
+
+				input.readOnly = false;
+				checkFormData = 1;
+			});
+		}
+	</script>
+
+	<div class="sslSealCode copyCode seal1 advanced" id="banner_code_300">
+		<script src="//secure.trust-provider.com/trustlogo/javascript/trustlogo.js" type="text/javascript"></script>
+		<script
+			type="text/javascript"> TrustLogo("//https://www.mysecuressls.com/images/seals/vodien_secure_01.png", "SC5");</script>
+	</div>
+
+</body>
+
+</html>

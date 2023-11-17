@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="assets/css/bootstrap-min.css">
+	<link rel="stylesheet" href="assets/css/style.css">
+	<link rel="stylesheet" href="assets/css/responsive.css">
+
+	<script src="assets/js/jquery-3.6.0.js"></script>
+	<script src="assets/components/jquery/purl.js"></script>
+	<script src="assets/components/tether/js/tether.min.js"></script>
+	<title>index page</title>
+
+	<script>
+		var newForm;
+		// ---START---SETUP VARIABLES---
+		var scrollToAppForm = false;
+		var authApiUrl; // URL for authorize API
+		var clientId; // your app_id/client_id provided to you during onboarding
+		var redirectUrl; // callback url for your application
+		var purpose_id; // The purpose of your data retrieval
+		var scope; // the attributes you are retrieving for your application to fill the form
+		var method = "S256"
+		var securityEnable; // the auth level, determines the flow
+		var clientAssertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+		// ---END---SETUP VARIABLES---
+
+
+		// ---START---WINDOW ONLOAD---
+		window.onload = function (e) {
+			// invoke AJAX call to get the demo app info from config
+			$.ajax({
+				url: "/getEnv",
+				data: {},
+				type: "GET",
+				success: function (result) {
+					// console.log("result:", result);
+					clientId = result.clientId;
+					redirectUrl = result.redirectUrl;
+					scope = result.scope;
+					purpose_id = result.purpose_id;
+					environment = result.environment;
+					authApiUrl = result.authApiUrl;
+				},
+				error: function (result) {
+					alert("ERROR:" + JSON.stringify(result.responseJSON.error));
+				}
+			});
+		}
+		// ---END---WINDOW ONLOAD---
+
+
+		// ---START---MAIN HANDLER---
+		$(function () {
+			$("#formAuthorize").submit(function (event) {
+				event.preventDefault();
+				callAuthorizeApi();
+			});
+			$("#formApplication").submit(function (event) {
+				event.preventDefault();
+				// add code here to submit the application form back to server for processing
+				$('#complete').toggleClass('hidden');
+			});
+		});
+		// ---END---MAIN HANDLER---
+
+
+		// ---START---AUTH API---
+		function callAuthorizeApi() {
+			//Call backend server to generate code challenge 
+			$.ajax({
+				url: "/generateCodeChallenge",
+				data: {},
+				type: "POST",
+				success: function (result) {
+					//Redirect to authorize url after generating code challenge
+					var authorizeUrl = authApiUrl + "?client_id=" + clientId +
+						"&scope=" + scope +
+						"&purpose_id=" + purpose_id +
+						"&code_challenge=" + result +
+						"&code_challenge_method=" + method +
+						"&redirect_uri=" + redirectUrl;
+
+					window.location = authorizeUrl;
+				},
+				error: function (result) {
+					alert("ERROR:" + JSON.stringify(result.responseJSON.error));
+				}
+			});
+		}
+		// ---END---AUTH API---
+
+
+		// ---START---CALLBACK HANDLER (AUTH CODE)
+		if (this.location.href.indexOf("callback?code") > -1) {
+			scrollToAppForm = true;
+			callServerAPIs(); // call the backend server APIs
+		} else if (this.location.href.indexOf("callback") > -1) {
+			scrollToAppForm = true;
+			alert("ERROR:" + JSON.stringify("Missing Auth Code"));
+		}
+		// ---END---CALLBACK HANDLER
+
+
+		// ---START---CALL SERVER API - calling server side APIs (token & person) to get the person data for prefilling form
+		function callServerAPIs() {
+			var authCode = $.url(this.location.href).param('code');
+			// console.log("Auth Code:",authCode);
+			// console.log("State:",state);
+
+			// invoke AJAX call from frontend client side to your backend server side
+			$.ajax({
+				url: "/getPersonData",
+				data: {
+					authCode: authCode,
+					codeVerifier: window.sessionStorage.getItem("codeVerifier")
+				},
+				type: "POST", // post to server side
+				success: function (result) {
+					// console.log("result",result);
+					prefillForm(result);
+				},
+				error: function (result) {
+					alert("ERROR:" + JSON.stringify(result.responseJSON.error));
+				}
+			});
+		}
+		// ---END---CALL SERVER API - calling server side APIs (token & person) to get the person data for prefilling form
+
+
+		// ---START---PREFILL FORM (with MyInfo data)
+		function prefillForm(data) {
+			// prefill form data
+			var noaData = "";
+			var address = "";
+			if (data["noa-basic"]) {
+				noaData = str(data["noa-basic"].amount) ? formatMoney(str(data["noa-basic"].amount), 2, ".", ",") : "";
+			}
+			if (data.regadd.type == "SG") {
+				address = str(data.regadd.country) == "" ? "" :
+					str(data.regadd.block) + " " +
+					str(data.regadd.building) + " \n" +
+					"#" + str(data.regadd.floor) + "-" + str(data.regadd.unit) + " " +
+					str(data.regadd.street) + " \n" +
+					"Singapore " + str(data.regadd.postal)
+			} else if (data.regadd.type == "Unformatted") {
+				address = str(data.regadd.line1) + "\n" +
+					str(data.regadd.line2)
+			}
+			var formValues = {
+				"uinfin": str(data.uinfin),
+				"name": str(data.name),
+				"sex": str(data.sex),
+				"race": str(data.race),
+				"nationality": str(data.nationality),
+				"dob": str(data.dob),
+				"email": str(data.email),
+				"mobileno": str(data.mobileno.prefix) + str(data.mobileno.areacode) + " " + str(data.mobileno.nbr),
+				"regadd": address,
+				"housingtype": str(data.housingtype) == "" ? str(data.hdbtype) : str(data.housingtype),
+				"marital": str(data.marital),
+				"edulevel": str(data.edulevel),
+				"assessableincome": noaData,
+			};
+			// Populate values
+			populate('#formApplication', formValues);
+
+			newForm = formValues;
+		}
+
+		function formatMoney(n, c, d, t) {
+			var c = isNaN(c = Math.abs(c)) ? 2 : c,
+				d = d == undefined ? "." : d,
+				t = t == undefined ? "," : t,
+				s = n < 0 ? "-" : "",
+				i = String(parseInt(n = Math.abs(Number(n) || 0).toFixed(c))),
+				j = (j = i.length) > 3 ? j % 3 : 0;
+
+			return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n -
+				i).toFixed(c).slice(2) : "");
+		}
+
+		function populate(frm, data) {
+			$.each(data, function (key, value) {
+				$('[name=' + key + ']', frm).val(value);
+				$('[name=' + key + ']', frm).prop('disabled', true);
+			});
+		}
+
+		// used to output data items with value or desc
+		function str(data) {
+			if (!data)
+				return null;
+			if (data.value)
+				return data.value;
+			else if (data.desc)
+				return data.desc;
+			else if (typeof data == "string")
+				return data;
+			else
+				return "";
+		}
+		// ---END---PREFILL FORM (with MyInfo data)
+	</script>
+</head>
+
+<body>
+
+	<!-- sgp-front-section-start -->
+	<section class="sgp-front-section">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-12">
+					<div class="site-logo">
+						<div class="img-box">
+							<img src="assets/imgs/site-logo.png" alt="site-logo">
+						</div>
+					</div>
+					<div class="content-wrapper">
+						<div class="row">
+							<div class="col-12 col-lg-6 col-xxl-6">
+								<div class="content-meta-wrapper">
+									<div class="img-box">
+										<img src="assets/imgs/singpass_logo.png" alt="logo">
+									</div>
+									<h1>"GET THE BEST RATES IN SINGAPORE WITH SGP Credit."</h1>
+									<h2>PERSONAL LOAN</h2>
+								</div>
+							</div>
+							<div class="col-12 col-lg-6 col-xxl-6">
+								<div class="content-form-wrapper">
+									<!-- <form action="/redirect" method="post"> -->
+									<label for="loanAmount" class="form-label">Loan Amount</label>
+									<div class="input-group">
+										<span class="input-group-text">$</span>
+										<input type="text" class="form-control" id="loanAmount"
+											aria-label="Amount (to the nearest dollar)">
+										<span class="input-group-text">.00</span>
+									</div>
+									<label for="loanTenure" class="form-label">Loan Tenure</label>
+									<div class="input-group">
+										<input type="text" class="form-control" id="loanTenure" aria-label="">
+										<span class="input-group-text">yrs</span>
+									</div>
+									<label for="loanPurpose" class="form-label">Purpose of Loan</label>
+									<div class="input-group">
+										<input type="text" class="form-control" id="loanPurpose" aria-label="">
+									</div>
+									<label for="moneylender" class="form-label">Other moneylender</label>
+									<div class="input-group">
+										<select class="form-control" id="moneylender">
+											<option value="yes">Yes</option>
+											<option value="no">No</option>
+										</select>
+									</div>
+									<button class="btn apply-btn" data-bs-toggle="modal"
+										data-bs-target="#apply-singpass" type="button">Apply Now</button>
+									<!-- </form> -->
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- sgp-front-section-end -->
+	<!-- retrieve-info-modal -->
+	<div class="modal fade retrieve-info-modal" id="apply-singpass" tabindex="-1">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<div class="img-box">
+						<img src="assets/imgs/singpass_logo.png" alt="logo">
+					</div>
+					<p>Apply with singpass and increase your chances of getting a better quote.</p>
+					<div class="retrieve-info-box">
+						<form id="formAuthorize">
+							<!-- <a href="#" onclick="$(this).closest('form').submit()" class="btn2">Retrieve MyInfo</a> -->
+							<button onclick="$(this).closest('form').submit()" class="retrieve-info-btn">Retrieve Myinfo
+								with <span><img src="assets/imgs/singpass_logo.png" alt="logo"></span></button>
+						</form>
+					</div>
+					<span class="extra-meta"><a href="/manual-fill">No thanks</a>, I'll submit
+						an
+						application manually.</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
+
+	<script src="assets/js/jquery-3.6.0.js"></script>
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+	<script>
+		$(document).ready(function () {
+			$('.apply-btn').click(function () {
+
+				var loanAmount = $('#loanAmount').val();
+				var loanTenure = $('#loanTenure').val();
+				var loanPurpose = $('#loanPurpose').val();
+				var moneylender = $('#moneylender').val();
+
+				localStorage.setItem("loanAmount", loanAmount);
+				var amunt = localStorage.getItem("loanAmount");
+				localStorage.setItem("loanTenure", loanTenure);
+				// localStorage.getItem("loanTenure");
+				localStorage.setItem("loanPurpose", loanPurpose);
+				// localStorage.getItem("loanPurpose");
+				localStorage.setItem("moneylender", moneylender);
+				// localStorage.getItem("moneylender");
+				$('.retrieve-info-modal').modal('show');
+			})
+		})
+		// $(window).on('load', function () {
+		// 	$('.retrieve-info-modal').modal('show');
+		// });
+	</script>
+
+</body>
+
+</html>
