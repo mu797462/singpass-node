@@ -7,8 +7,8 @@
  */
 
 let ENVIRONMENT = process.argv[2];
-let urlEnvironmentPrefix = ENVIRONMENT == "prod" ? "" : `${ENVIRONMENT}.`;
-
+//let urlEnvironmentPrefix = ENVIRONMENT == "prod" ? "" : `${ENVIRONMENT}.`;
+let urlEnvironmentPrefix = "http://13.53.98.175:3001";
 let PORT = 3001;
 
 /**
@@ -29,13 +29,13 @@ let APP_CONFIG = {
   DEMO_APP_CLIENT_PRIVATE_SIGNING_KEY:
     "./cert/your-sample-app-signing-private-key.pem",
   DEMO_APP_CLIENT_PRIVATE_ENCRYPTION_KEYS: "./cert/encryption-private-keys/",
-  DEMO_APP_CALLBACK_URL: "http://13.53.98.175:3001/callback",
-  // DEMO_APP_CALLBACK_URL: "http://localhost:3001/callback",
+  // DEMO_APP_CALLBACK_URL: "http://13.53.98.175:3001/callback",
+  DEMO_APP_CALLBACK_URL: "http://localhost:3001/callback",
   DEMO_APP_PURPOSE_ID: "demonstration",
   DEMO_APP_SCOPES:
     "uinfin name sex race nationality dob email mobileno regadd housingtype hdbtype marital edulevel noa-basic ownerprivate cpfcontributions cpfbalances",
-  MYINFO_API_AUTHORIZE: `https://test.api.myinfo.gov.sg/com/v4/authorize`,
-  // MYINFO_API_AUTHORIZE: `https://${urlEnvironmentPrefix}api.myinfo.gov.sg/com/v4/authorize`,
+  // MYINFO_API_AUTHORIZE: `https://test.api.myinfo.gov.sg/com/v4/authorize`,
+  MYINFO_API_AUTHORIZE: `https://${urlEnvironmentPrefix}api.myinfo.gov.sg/com/v4/authorize`,
 };
 
 /**
@@ -77,14 +77,14 @@ let MYINFO_CONNECTOR_CONFIG = {
   SUBENTITY_ID: APP_CONFIG.DEMO_APP_SUBENTITY_ID,
   REDIRECT_URL: APP_CONFIG.DEMO_APP_CALLBACK_URL,
   SCOPE: APP_CONFIG.DEMO_APP_SCOPES,
-  // AUTHORIZE_JWKS_URL: `https://${urlEnvironmentPrefix}authorise.singpass.gov.sg/.well-known/keys.json`,
-  AUTHORIZE_JWKS_URL: `https://test.authorise.singpass.gov.sg/.well-known/keys.json`,
-  MYINFO_JWKS_URL: `https://test.authorise.singpass.gov.sg/.well-known/keys.json`,
-  // MYINFO_JWKS_URL: `https://${urlEnvironmentPrefix}authorise.singpass.gov.sg/.well-known/keys.json`,
-  TOKEN_URL: `https://test.api.myinfo.gov.sg/com/v4/token`,
-  // TOKEN_URL: `https://${urlEnvironmentPrefix}api.myinfo.gov.sg/com/v4/token`,
-  PERSON_URL: `https://test.api.myinfo.gov.sg/com/v4/person`,
-  // PERSON_URL: `https://${urlEnvironmentPrefix}api.myinfo.gov.sg/com/v4/person`,
+  AUTHORIZE_JWKS_URL: `https://${urlEnvironmentPrefix}authorise.singpass.gov.sg/.well-known/keys.json`,
+  // AUTHORIZE_JWKS_URL: `https://test.authorise.singpass.gov.sg/.well-known/keys.json`,
+  // MYINFO_JWKS_URL: `https://test.authorise.singpass.gov.sg/.well-known/keys.json`,
+  MYINFO_JWKS_URL: `https://${urlEnvironmentPrefix}authorise.singpass.gov.sg/.well-known/keys.json`,
+  // TOKEN_URL: `https://test.api.myinfo.gov.sg/com/v4/token`,
+  TOKEN_URL: `https://${urlEnvironmentPrefix}api.myinfo.gov.sg/com/v4/token`,
+  // PERSON_URL: `https://test.api.myinfo.gov.sg/com/v4/person`,
+  PERSON_URL: `https://${urlEnvironmentPrefix}api.myinfo.gov.sg/com/v4/person`,
   CLIENT_ASSERTION_SIGNING_KID: "", // optional parameter to specify specific kid for signing. Default will be thumbprint of JWK
   USE_PROXY: "N",
   PROXY_TOKEN_URL: "",
