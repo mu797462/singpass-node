@@ -33,7 +33,8 @@ let APP_CONFIG = {
   DEMO_APP_PURPOSE_ID: "demonstration",
   DEMO_APP_SCOPES:
     "uinfin name sex race nationality dob email mobileno regadd housingtype hdbtype marital edulevel noa-basic ownerprivate cpfcontributions cpfbalances",
-  MYINFO_API_AUTHORIZE: `https://${urlEnvironmentPrefix}api.myinfo.gov.sg/com/v4/authorize`,
+  MYINFO_API_AUTHORIZE: `https://$test.api.myinfo.gov.sg/com/v4/authorize`,
+  // MYINFO_API_AUTHORIZE: `https://${urlEnvironmentPrefix}api.myinfo.gov.sg/com/v4/authorize`,
 };
 
 /**
