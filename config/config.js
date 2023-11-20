@@ -9,8 +9,8 @@
 let ENVIRONMENT = process.argv[2];
 
 // console.log(ENVIRONMENT);
-// let urlEnvironmentPrefix = ENVIRONMENT == "prod" ? "" : `${ENVIRONMENT}.`;
-let urlEnvironmentPrefix = "test.";
+let urlEnvironmentPrefix = ENVIRONMENT == "prod" ? "" : `${ENVIRONMENT}.`;
+// let urlEnvironmentPrefix = "test.";
 
 let PORT = 3001;
 
