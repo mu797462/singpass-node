@@ -7,8 +7,11 @@
  */
 
 let ENVIRONMENT = process.argv[2];
-//let urlEnvironmentPrefix = ENVIRONMENT == "prod" ? "" : `${ENVIRONMENT}.`;
+
+// console.log(ENVIRONMENT);
+// let urlEnvironmentPrefix = ENVIRONMENT == "prod" ? "" : `${ENVIRONMENT}.`;
 let urlEnvironmentPrefix = "test.";
+
 let PORT = 3001;
 
 /**
@@ -29,7 +32,7 @@ let APP_CONFIG = {
   DEMO_APP_CLIENT_PRIVATE_SIGNING_KEY:
     "./cert/your-sample-app-signing-private-key.pem",
   DEMO_APP_CLIENT_PRIVATE_ENCRYPTION_KEYS: "./cert/encryption-private-keys/",
-  DEMO_APP_CALLBACK_URL: "http://13.53.98.175:3001/",
+  DEMO_APP_CALLBACK_URL: "http://localhost:3001/callback",
   DEMO_APP_PURPOSE_ID: "demonstration",
   DEMO_APP_SCOPES:
     "uinfin name sex race nationality dob email mobileno regadd housingtype hdbtype marital edulevel noa-basic ownerprivate cpfcontributions cpfbalances",
